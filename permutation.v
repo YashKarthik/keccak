@@ -52,9 +52,17 @@ module permutation (
         64'h8000000080008008
     };
 
-    function static [63:0] rot_lane(input reg [63:0] col_parity);
+    localparam [5:0] rot_offset [5][5] = {
+        {0 , 1 , 62, 28, 27},
+        {36, 44, 6 , 55, 20},
+        {3 , 10, 43, 25, 39},
+        {41, 45, 15, 21, 8},
+        {18, 2 , 61, 56, 14}
+    };
+
+    function static [63:0] rot_lane(input reg [63:0] col_parity, input reg [5:0] offset);
         begin
-            return (col_parity << 1) | (col_parity >> 63);
+            return (col_parity << offset) | (col_parity >> (64 - offset));
         end
     endfunction
 
@@ -85,7 +93,7 @@ module permutation (
 
             STEP_DELTA: begin
                 for (i=0; i < 5; i = i + 1) begin
-                    col_deltas[i] <= col_paritys[(i == 0) ? 4 : (i - 1)] ^ rot_lane(col_paritys[(i + 1) % 5]);
+                    col_deltas[i] <= col_paritys[(i == 0) ? 4 : (i - 1)] ^ rot_lane(col_paritys[(i + 1) % 5], 1);
                 end
 
                 curr_state <= STEP_THETA;
@@ -98,6 +106,16 @@ module permutation (
                 for (j = 0; j < 5; j = j + 1) begin // row (up-down)
                     for (i = 0; i < 5; i = i + 1) begin // col (left-right)
                         sponge[i*64 + 64*5*j +: 64] <= sponge[i*64 + 64*5*j +: 64] ^ col_deltas[i];
+                    end
+                end
+            end
+
+            // x, i: column
+            // y, j: row
+            STEP_RHO_PI: begin
+                for (j = 0; j < 5; j = j + 1) begin // row (up-down)
+                    for (i = 0; i < 5; i = i + 1) begin // col (left-right)
+                        sponge[j*64 + 64*5*(2*i+3*j) +: 64] <= rot_lane(sponge[i*64 + 64*5*j +: 64], rot_offset[j][i]);
                     end
                 end
             end
