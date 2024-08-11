@@ -8,6 +8,7 @@ module permutation (
     output wire o_ready
 );
     reg [1599:0] sponge;
+    reg [1599:0] sponge_temp;
     reg [63:0] col_paritys [5];
     reg [63:0] col_deltas [5];
     reg [2:0] curr_state = READY;
@@ -115,9 +116,21 @@ module permutation (
             STEP_RHO_PI: begin
                 for (j = 0; j < 5; j = j + 1) begin // row (up-down)
                     for (i = 0; i < 5; i = i + 1) begin // col (left-right)
-                        sponge[j*64 + 64*5*(2*i+3*j) +: 64] <= rot_lane(sponge[i*64 + 64*5*j +: 64], rot_offset[j][i]);
+                        sponge_temp[j*64 + 64*5*(2*i+3*j) +: 64] <= rot_lane(sponge[i*64 + 64*5*j +: 64], rot_offset[j][i]);
                     end
                 end
+
+                curr_state <= STEP_CHI;
+            end
+
+            STEP_CHI: begin
+                for (j = 0; j < 5; j = j + 1) begin // row (up-down)
+                    for (i = 0; i < 5; i = i + 1) begin // col (left-right)
+                        sponge[i*64 + 64*5*j +: 64] <= sponge_temp[i*64 + 64*5*j +: 64] ^ ((~sponge_temp[(i+1)*64 + 64*5*j +: 64]) & sponge_temp[(i+2)*64 + 64*5*j +: 64]);
+                    end
+                end
+
+                curr_state <= STEP_CHI;
             end
 
             STEP_IOTA: begin
