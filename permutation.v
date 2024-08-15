@@ -13,8 +13,8 @@ module permutation (
     reg [63:0] col_deltas [5];
     reg [2:0] curr_state = READY;
     reg [4:0] rounds = 0;
-    reg [2:0] i;
-    reg [2:0] j;
+    reg [6:0] i;
+    reg [6:0] j;
 
     localparam
         READY        = 3'b000,
@@ -82,7 +82,7 @@ module permutation (
 
             STEP_COLS: begin
                 for (i=0; i < 5; i = i + 1) begin
-                    col_paritys[i] <= sponge[i*64 +: 64]
+                    col_paritys[i[2:0]] <= sponge[i*64 +: 64]
                     ^ sponge[i*64 + 64*5 +: 64]
                     ^ sponge[i*64 + 64*10 +: 64]
                     ^ sponge[i*64 + 64*15 +: 64]
