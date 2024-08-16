@@ -20,7 +20,6 @@ module permutation (
         READY        = 3'b000,
         STEP_THETA   = 3'b001,
         STEP_RHO_PI  = 3'b010,
-        STEP_PI      = 3'b011,
         STEP_CHI     = 3'b100,
         STEP_IOTA    = 3'b101,
         STEP_COLS    = 3'b110,
@@ -130,11 +129,11 @@ module permutation (
                     end
                 end
 
-                curr_state <= STEP_CHI;
+                curr_state <= STEP_IOTA;
             end
 
             STEP_IOTA: begin
-                curr_state <= (rounds == 24) ? READY : STEP_THETA;
+                curr_state <= (rounds == 24) ? READY : STEP_COLS;
                 sponge[63:0] <= sponge[63:0] ^ RC[rounds - 1];
             end
 
